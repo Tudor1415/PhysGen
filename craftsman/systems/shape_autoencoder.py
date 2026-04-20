@@ -53,7 +53,7 @@ class ShapeAutoEncoderSystem(BaseSystem):
         if self.trainer is not None and not self.trainer.is_global_zero:
             return
 
-        uid = os.path.basename(batch["uid"][0]).replace(".npz", "")
+        uid = os.path.splitext(os.path.basename(batch["uid"][0]))[0]
         mesh_rel_path = f"it{self.true_global_step}/{uid}.obj"
         mesh_abs_path = self.get_save_path(mesh_rel_path)
         if os.path.exists(mesh_abs_path):
@@ -69,6 +69,15 @@ class ShapeAutoEncoderSystem(BaseSystem):
             self.save_mesh(mesh_rel_path, mesh_v_f[0][0], mesh_v_f[0][1])
         except Exception as e:
             print(f"Failed to save mesh for {uid}: {e}")
+
+    def _reconstruct_latents(self, batch: Dict[str, Any], split: str = "val") -> torch.Tensor:
+        self.shape_model.split = split
+        _, kl_embed, _ = self.shape_model.encode(
+            batch["coarse_surface"],
+            batch["sharp_surface"],
+            sample_posterior=self.cfg.sample_posterior,
+        )
+        return self.shape_model.decode(kl_embed)
 
     def forward(self, batch: Dict[str, Any],split: str) -> Dict[str, Any]:
         num = batch["number_sharp"][0].item()
@@ -159,6 +168,12 @@ class ShapeAutoEncoderSystem(BaseSystem):
     @torch.no_grad()
     def validation_step(self, batch, batch_idx):
         self.eval()
+        if "rand_points" not in batch or ("sdf" not in batch and "occupancies" not in batch):
+            latents = self._reconstruct_latents(batch, split="val")
+            self._maybe_save_mesh(batch, latents)
+            torch.cuda.empty_cache()
+            return {}
+
         out = self(batch, 'val')
         self._maybe_save_mesh(batch, out["latents"])
 
@@ -171,6 +186,12 @@ class ShapeAutoEncoderSystem(BaseSystem):
     @torch.no_grad()
     def test_step(self, batch, batch_idx):
         self.eval()
+        if "rand_points" not in batch or ("sdf" not in batch and "occupancies" not in batch):
+            latents = self._reconstruct_latents(batch, split="val")
+            self._maybe_save_mesh(batch, latents)
+            torch.cuda.empty_cache()
+            return {}
+
         out = self(batch, 'val')
         self._maybe_save_mesh(batch, out["latents"])
 

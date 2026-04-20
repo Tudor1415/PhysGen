@@ -75,12 +75,12 @@ seed = int(os.environ["SEED"])
 
 candidates = sorted(
     str(path.resolve())
-    for path in data_root.rglob("*.npz")
+    for path in data_root.rglob("*.obj")
     if path.is_file()
 )
 
 if not candidates:
-    raise RuntimeError(f"No .npz files found under {data_root}")
+    raise RuntimeError(f"No .obj files found under {data_root}")
 
 rng = random.Random(seed)
 picked = rng.sample(candidates, k=min(num_samples, len(candidates)))
@@ -103,7 +103,7 @@ fi
 # - no PhysDec, DragDec, or joint model
 # - deterministic latent path via sample_posterior=false
 python -u launch_shapevae.py \
-  --config configs/shape-autoencoder/Dora-VAE-test.yaml \
+  --config configs/shape-autoencoder/Dora-VAE-test-online-obj.yaml \
   --gpu 0 \
   --test \
   data.root_dir="$TMP_ROOT" \

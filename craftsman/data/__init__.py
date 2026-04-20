@@ -1,3 +1,4 @@
 from . import (
-    objaverse
+    objaverse,
+    online_obj,
 )

@@ -8,8 +8,8 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --hint=nomultithread
 #SBATCH --time=00:30:00
-#SBATCH --output=shape_recon_10_%j.out
-#SBATCH --error=shape_recon_10_%j.out
+#SBATCH --output=slurm_logs/shape_recon_10_%j.out
+#SBATCH --error=slurm_logs/shape_recon_10_%j.out
 
 set -euo pipefail
 set -x

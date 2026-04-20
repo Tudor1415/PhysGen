@@ -17,11 +17,6 @@ set -eo pipefail
 set -x
 
 module purge
-ANACONDA_MODULE="${ANACONDA_MODULE:-anaconda-py3/2024.06}"
-CONDA_ENV_NAME="${CONDA_ENV_NAME:-physgen}"
-CONDA_BASE="${CONDA_BASE:-/gpfslocalsup/pub/anaconda-py3/2024.06}"
-
-module load "$ANACONDA_MODULE"
 module load cuda/12.8.0
 
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
@@ -29,17 +24,30 @@ cd "${SLURM_SUBMIT_DIR:-$PWD}"
 export PYTHONUNBUFFERED=1
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
-if command -v conda >/dev/null 2>&1; then
-  eval "$(conda shell.bash hook)"
-elif [ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
-  # shellcheck disable=SC1091
-  source "$CONDA_BASE/etc/profile.d/conda.sh"
-else
-  echo "ERROR: conda is not available after loading $ANACONDA_MODULE"
+# Prefer an explicit virtualenv path, then fall back to common physgen venv locations.
+PHYSGEN_VENV="${PHYSGEN_VENV:-${WORK}/PhysGen/physgen}"
+if [ -z "$PHYSGEN_VENV" ]; then
+  for candidate in \
+    "${SLURM_SUBMIT_DIR:-$PWD}/physgen" \
+    "${SLURM_SUBMIT_DIR:-$PWD}/.venv" \
+    "$HOME/physgen" \
+    "$HOME/.virtualenvs/physgen"
+  do
+    if [ -f "$candidate/bin/activate" ]; then
+      PHYSGEN_VENV="$candidate"
+      break
+    fi
+  done
+fi
+
+if [ -z "$PHYSGEN_VENV" ] || [ ! -f "$PHYSGEN_VENV/bin/activate" ]; then
+  echo "ERROR: physgen virtualenv not found."
+  echo "Set PHYSGEN_VENV to the venv root containing bin/activate."
   exit 1
 fi
 
-conda activate "$CONDA_ENV_NAME"
+# shellcheck disable=SC1091
+source "$PHYSGEN_VENV/bin/activate"
 
 PYTHON_BIN="$(command -v python)"
 
@@ -50,7 +58,7 @@ import sys
 print("preflight: start", flush=True)
 print("preflight: python =", sys.executable, flush=True)
 import os
-print("preflight: conda env =", os.environ.get("CONDA_DEFAULT_ENV", ""), flush=True)
+print("preflight: venv =", os.environ.get("VIRTUAL_ENV", ""), flush=True)
 
 print("preflight: importing torch", flush=True)
 import torch

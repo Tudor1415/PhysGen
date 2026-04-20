@@ -17,6 +17,7 @@ set -x
 
 module purge
 module load python/3.9.12
+module load cuda/12.8.0
 
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
 

@@ -12,6 +12,7 @@
 #SBATCH --output=slurm_logs/shape_recon_10_%j.out
 #SBATCH --error=slurm_logs/shape_recon_10_%j.err
 
+set +u
 set -eo pipefail
 set -x
 
@@ -51,8 +52,16 @@ echo "Using python: $PYTHON_BIN"
 "$PYTHON_BIN" --version
 "$PYTHON_BIN" - <<'PY'
 import sys
-import pytorch_lightning
+print("preflight: start", flush=True)
+print("preflight: python =", sys.executable, flush=True)
+
+print("preflight: importing torch", flush=True)
 import torch
+
+print("preflight: importing pytorch_lightning", flush=True)
+import pytorch_lightning
+
+print("preflight: importing trimesh", flush=True)
 import trimesh
 
 print("Python executable:", sys.executable)

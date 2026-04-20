@@ -66,6 +66,15 @@ class ShapeAutoEncoderSystem(BaseSystem):
                 octree_depth=9,
                 save_slice_dir=save_slice_dir,
             )
+        except Exception as e:
+            print(f"DiffDMC mesh extraction failed for {uid}: {e}")
+            print(f"Falling back to skimage marching cubes for {uid}.")
+            mesh_v_f, _ = self.shape_model.extract_geometry(
+                latents,
+                octree_depth=9,
+                save_slice_dir=save_slice_dir,
+            )
+        try:
             self.save_mesh(mesh_rel_path, mesh_v_f[0][0], mesh_v_f[0][1])
         except Exception as e:
             print(f"Failed to save mesh for {uid}: {e}")

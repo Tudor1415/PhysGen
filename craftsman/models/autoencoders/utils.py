@@ -27,7 +27,13 @@ from craftsman.utils.base import BaseModule
 from craftsman.utils.typing import *
 from craftsman.utils.misc import get_world_size
 from craftsman.utils.ops import generate_dense_grid_points
-from diso import DiffDMC, DiffMC
+try:
+    from diso import DiffDMC, DiffMC
+    DISO_IMPORT_ERROR = None
+except ImportError as e:
+    DiffDMC = None
+    DiffMC = None
+    DISO_IMPORT_ERROR = e
 import time
 import matplotlib.pyplot as plt
 from math import ceil
@@ -268,6 +274,8 @@ class AutoEncoder(BaseModule):
                          num_chunks: int = 10000,
                          save_slice_dir: str = ''
                          ):
+        if DiffDMC is None:
+            raise ImportError(f"diso / DiffDMC is unavailable: {DISO_IMPORT_ERROR}")
         
         if isinstance(bounds, float):
             bounds = [-bounds, -bounds, -bounds, bounds, bounds, bounds]

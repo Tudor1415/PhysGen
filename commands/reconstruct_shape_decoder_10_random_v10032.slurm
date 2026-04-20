@@ -9,7 +9,7 @@
 #SBATCH --hint=nomultithread
 #SBATCH --time=00:30:00
 #SBATCH --output=slurm_logs/shape_recon_10_%j.out
-#SBATCH --error=slurm_logs/shape_recon_10_%j.out
+#SBATCH --error=slurm_logs/shape_recon_10_%j.err
 
 set -euo pipefail
 set -x
@@ -18,15 +18,24 @@ module purge
 module load anaconda3 || true
 module load cuda/12.1 || true
 
-if command -v conda >/dev/null 2>&1; then
+# By default, reuse the Python environment exported to the batch job.
+# If you need a specific conda env, submit with for example:
+# CONDA_ENV_NAME=torch-env sbatch commands/reconstruct_shape_decoder_10_random_v10032.slurm
+CONDA_ENV_NAME="${CONDA_ENV_NAME:-}"
+if [ -n "$CONDA_ENV_NAME" ] && command -v conda >/dev/null 2>&1; then
+  set +u
   eval "$(conda shell.bash hook)"
-  conda activate physgen
+  conda activate "$CONDA_ENV_NAME"
+  set -u
 fi
 
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
 
 export PYTHONUNBUFFERED=1
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
+
+which python
+python --version
 
 DATA_ROOT="${DATA_ROOT:-${SCRATCH}/seg_data}"
 CKPT_PATH="${CKPT_PATH:-outputs/ShapeVAE/shapevae_output/ckpts/last.ckpt}"

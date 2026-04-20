@@ -17,7 +17,11 @@ set -eo pipefail
 set -x
 
 module purge
-module load python/3.9.12
+ANACONDA_MODULE="${ANACONDA_MODULE:-anaconda-py3/2024.06}"
+CONDA_ENV_NAME="${CONDA_ENV_NAME:-physgen}"
+CONDA_BASE="${CONDA_BASE:-/gpfslocalsup/pub/anaconda-py3/2024.06}"
+
+module load "$ANACONDA_MODULE"
 module load cuda/12.8.0
 
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
@@ -25,28 +29,19 @@ cd "${SLURM_SUBMIT_DIR:-$PWD}"
 export PYTHONUNBUFFERED=1
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
-REPO_ROOT="$(pwd)"
-DEFAULT_VENV_DIR="$(cd "${REPO_ROOT}/.." && pwd)/torch-env"
-VENV_DIR="${VENV_DIR:-$DEFAULT_VENV_DIR}"
-PYTHON_BIN="${PYTHON_BIN:-}"
-
-if [ ! -f "$VENV_DIR/bin/activate" ]; then
-  echo "ERROR: venv activate script not found: $VENV_DIR/bin/activate"
+if command -v conda >/dev/null 2>&1; then
+  eval "$(conda shell.bash hook)"
+elif [ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
+  # shellcheck disable=SC1091
+  source "$CONDA_BASE/etc/profile.d/conda.sh"
+else
+  echo "ERROR: conda is not available after loading $ANACONDA_MODULE"
   exit 1
 fi
 
-if [ -f "$VENV_DIR/bin/activate" ]; then
-  # shellcheck disable=SC1090
-  source "$VENV_DIR/bin/activate"
-fi
+conda activate "$CONDA_ENV_NAME"
 
-if [ -z "$PYTHON_BIN" ]; then
-  if [ -x "$VENV_DIR/bin/python" ]; then
-    PYTHON_BIN="$VENV_DIR/bin/python"
-  else
-    PYTHON_BIN="$(command -v python)"
-  fi
-fi
+PYTHON_BIN="$(command -v python)"
 
 echo "Using python: $PYTHON_BIN"
 "$PYTHON_BIN" --version
@@ -54,6 +49,8 @@ echo "Using python: $PYTHON_BIN"
 import sys
 print("preflight: start", flush=True)
 print("preflight: python =", sys.executable, flush=True)
+import os
+print("preflight: conda env =", os.environ.get("CONDA_DEFAULT_ENV", ""), flush=True)
 
 print("preflight: importing torch", flush=True)
 import torch

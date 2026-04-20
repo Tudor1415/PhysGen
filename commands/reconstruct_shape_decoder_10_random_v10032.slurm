@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=shape_recon_10
+#SBATCH -A wbw@v100
 #SBATCH -C v100-32g
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1

@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --hint=nomultithread
 #SBATCH --time=00:30:00
+#SBATCH --export=ALL
 #SBATCH --output=slurm_logs/shape_recon_10_%j.out
 #SBATCH --error=slurm_logs/shape_recon_10_%j.err
 
@@ -15,36 +16,21 @@ set -euo pipefail
 set -x
 
 module purge
-# Optional cluster-specific modules.
-# Example:
-# ANACONDA_MODULE=python/3.9.12 CUDA_MODULE=cuda/12.8 sbatch ...
-ANACONDA_MODULE="${ANACONDA_MODULE:-}"
-CUDA_MODULE="${CUDA_MODULE:-}"
-if [ -n "$ANACONDA_MODULE" ]; then
-  module load "$ANACONDA_MODULE"
-fi
-if [ -n "$CUDA_MODULE" ]; then
-  module load "$CUDA_MODULE"
-fi
+module load python/3.9.12
 
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
 
 export PYTHONUNBUFFERED=1
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
-# Resolve the interpreter explicitly instead of relying on whatever `python`
-# remains after `module purge`.
 REPO_ROOT="$(pwd)"
 DEFAULT_VENV_DIR="$(cd "${REPO_ROOT}/.." && pwd)/torch-env"
 VENV_DIR="${VENV_DIR:-$DEFAULT_VENV_DIR}"
-CONDA_ENV_NAME="${CONDA_ENV_NAME:-}"
 PYTHON_BIN="${PYTHON_BIN:-}"
 
-if [ -n "$CONDA_ENV_NAME" ] && command -v conda >/dev/null 2>&1; then
-  set +u
-  eval "$(conda shell.bash hook)"
-  conda activate "$CONDA_ENV_NAME"
-  set -u
+if [ ! -f "$VENV_DIR/bin/activate" ]; then
+  echo "ERROR: venv activate script not found: $VENV_DIR/bin/activate"
+  exit 1
 fi
 
 if [ -f "$VENV_DIR/bin/activate" ]; then

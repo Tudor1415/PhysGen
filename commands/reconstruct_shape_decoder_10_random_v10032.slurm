@@ -12,7 +12,7 @@
 #SBATCH --output=slurm_logs/shape_recon_10_%j.out
 #SBATCH --error=slurm_logs/shape_recon_10_%j.err
 
-set -euo pipefail
+set -eo pipefail
 set -x
 
 module purge

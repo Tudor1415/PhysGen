@@ -15,18 +15,16 @@ set -euo pipefail
 set -x
 
 module purge
-module load anaconda3 || true
-module load cuda/12.1 || true
-
-# By default, reuse the Python environment exported to the batch job.
-# If you need a specific conda env, submit with for example:
-# CONDA_ENV_NAME=torch-env sbatch commands/reconstruct_shape_decoder_10_random_v10032.slurm
-CONDA_ENV_NAME="${CONDA_ENV_NAME:-}"
-if [ -n "$CONDA_ENV_NAME" ] && command -v conda >/dev/null 2>&1; then
-  set +u
-  eval "$(conda shell.bash hook)"
-  conda activate "$CONDA_ENV_NAME"
-  set -u
+# Optional cluster-specific modules.
+# Example:
+# ANACONDA_MODULE=python/3.9.12 CUDA_MODULE=cuda/12.8 sbatch ...
+ANACONDA_MODULE="${ANACONDA_MODULE:-}"
+CUDA_MODULE="${CUDA_MODULE:-}"
+if [ -n "$ANACONDA_MODULE" ]; then
+  module load "$ANACONDA_MODULE"
+fi
+if [ -n "$CUDA_MODULE" ]; then
+  module load "$CUDA_MODULE"
 fi
 
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
@@ -34,8 +32,47 @@ cd "${SLURM_SUBMIT_DIR:-$PWD}"
 export PYTHONUNBUFFERED=1
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
-which python
-python --version
+# Resolve the interpreter explicitly instead of relying on whatever `python`
+# remains after `module purge`.
+REPO_ROOT="$(pwd)"
+DEFAULT_VENV_DIR="$(cd "${REPO_ROOT}/.." && pwd)/torch-env"
+VENV_DIR="${VENV_DIR:-$DEFAULT_VENV_DIR}"
+CONDA_ENV_NAME="${CONDA_ENV_NAME:-}"
+PYTHON_BIN="${PYTHON_BIN:-}"
+
+if [ -n "$CONDA_ENV_NAME" ] && command -v conda >/dev/null 2>&1; then
+  set +u
+  eval "$(conda shell.bash hook)"
+  conda activate "$CONDA_ENV_NAME"
+  set -u
+fi
+
+if [ -f "$VENV_DIR/bin/activate" ]; then
+  # shellcheck disable=SC1090
+  source "$VENV_DIR/bin/activate"
+fi
+
+if [ -z "$PYTHON_BIN" ]; then
+  if [ -x "$VENV_DIR/bin/python" ]; then
+    PYTHON_BIN="$VENV_DIR/bin/python"
+  else
+    PYTHON_BIN="$(command -v python)"
+  fi
+fi
+
+echo "Using python: $PYTHON_BIN"
+"$PYTHON_BIN" --version
+"$PYTHON_BIN" - <<'PY'
+import sys
+import pytorch_lightning
+import torch
+import trimesh
+
+print("Python executable:", sys.executable)
+print("torch:", torch.__version__)
+print("pytorch_lightning:", pytorch_lightning.__version__)
+print("trimesh:", trimesh.__version__)
+PY
 
 DATA_ROOT="${DATA_ROOT:-${SCRATCH}/seg_data}"
 CKPT_PATH="${CKPT_PATH:-outputs/ShapeVAE/shapevae_output/ckpts/last.ckpt}"
@@ -62,7 +99,7 @@ cleanup() {
 trap cleanup EXIT
 
 export DATA_ROOT TMP_ROOT NUM_SAMPLES SEED
-python - <<'PY'
+"$PYTHON_BIN" - <<'PY'
 import json
 import os
 import random
@@ -102,7 +139,7 @@ fi
 # - launch_shapevae.py / Dora-VAE-test.yaml
 # - no PhysDec, DragDec, or joint model
 # - deterministic latent path via sample_posterior=false
-python -u launch_shapevae.py \
+"$PYTHON_BIN" -u launch_shapevae.py \
   --config configs/shape-autoencoder/Dora-VAE-test-online-obj.yaml \
   --gpu 0 \
   --test \

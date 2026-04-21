@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=dora_preprocess
+#SBATCH -A wbw@v100
 #SBATCH --partition=prepost
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

@@ -7,7 +7,7 @@
 #SBATCH --gres=gpu:4
 #SBATCH --cpus-per-task=16
 #SBATCH --hint=nomultithread
-#SBATCH --time=24:00:00
+#SBATCH --time=10:00:00
 #SBATCH --output=slurm_logs/dora_vae_train_%j.out
 #SBATCH --error=slurm_logs/dora_vae_train_%j.err
 

@@ -5,6 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
+#SBATCH --time=05:00:00
 #SBATCH --output=slurm_logs/dora_preprocess_%j.out
 #SBATCH --error=slurm_logs/dora_preprocess_%j.err
 

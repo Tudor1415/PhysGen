@@ -41,7 +41,7 @@ DATA_ROOT="${DATA_ROOT:-${SCRATCH}/seg_data_dora}"
 CONFIG_PATH="${CONFIG_PATH:-configs/shape-autoencoder/Dora-VAE-train.yaml}"
 RUN_TAG="${RUN_TAG:-shapevae_train_seg_data_${SLURM_JOB_ID:-local}}"
 GPU_IDS="${GPU_IDS:-0}"
-BATCH_SIZE="${BATCH_SIZE:-8}"
+BATCH_SIZE="${BATCH_SIZE:-12}"
 NUM_WORKERS="${NUM_WORKERS:-${SLURM_CPUS_PER_TASK:-16}}"
 INIT_CKPT="${INIT_CKPT:-./outputs/Dora-VAE-1.1/dora_vae_1_1.ckpt}"
 

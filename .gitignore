@@ -28,7 +28,7 @@ env/
 .ipynb_checkpoints/
 
 # Training outputs (checkpoints, logs, test results)
-outputs/
+# outputs/
 
 # Data (large datasets should not be in the repo)
 data/dataset1/*.npz

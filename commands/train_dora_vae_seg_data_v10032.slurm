@@ -46,8 +46,9 @@ NUM_WORKERS="${NUM_WORKERS:-${SLURM_CPUS_PER_TASK:-16}}"
 INIT_CKPT="${INIT_CKPT:-./outputs/Dora-VAE-1.1/dora_vae_1_1.ckpt}"
 EXP_ROOT_DIR="${EXP_ROOT_DIR:-${WORK}/PhysGen}"
 EXP_NAME="${EXP_NAME:-ckpts}"
-RUN_TIMESTAMP="$(date +@%Y%m%d-%H%M%S)"
-TRIAL_DIR="${EXP_ROOT_DIR}/${EXP_NAME}/${RUN_TAG}${RUN_TIMESTAMP}"
+RUN_TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
+TRIAL_SUFFIX="@${RUN_TIMESTAMP}"
+TRIAL_DIR="${EXP_ROOT_DIR}/${EXP_NAME}/${RUN_TAG}${TRIAL_SUFFIX}"
 CKPT_DIR="${TRIAL_DIR}/ckpts"
 
 if [ ! -d "$DATA_ROOT" ]; then
@@ -70,6 +71,7 @@ fi
 echo "Resolved exp_root_dir: $EXP_ROOT_DIR"
 echo "Resolved experiment name: $EXP_NAME"
 echo "Resolved run tag: $RUN_TAG"
+echo "Resolved timestamp: $RUN_TIMESTAMP"
 echo "Expected trial_dir: $TRIAL_DIR"
 echo "Expected checkpoint dir: $CKPT_DIR"
 

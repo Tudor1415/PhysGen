@@ -1,16 +1,16 @@
 #!/bin/bash
-#SBATCH --job-name=shape_recon_train
+#SBATCH --job-name=shape_recon_10
 #SBATCH -A wbw@v100
-#SBATCH --partition=prepost
+#SBATCH -C v100-32g
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=10
 #SBATCH --hint=nomultithread
-#SBATCH --time=05:00:00
+#SBATCH --time=00:30:00
 #SBATCH --export=ALL
-#SBATCH --output=slurm_logs/shape_recon_train_%j.out
-#SBATCH --error=slurm_logs/shape_recon_train_%j.err
+#SBATCH --output=slurm_logs/shape_recon_10_%j.out
+#SBATCH --error=slurm_logs/shape_recon_10_%j.err
 
 set +u
 set -eo pipefail

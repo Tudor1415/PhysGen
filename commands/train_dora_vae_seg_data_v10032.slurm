@@ -46,6 +46,9 @@ NUM_WORKERS="${NUM_WORKERS:-${SLURM_CPUS_PER_TASK:-16}}"
 INIT_CKPT="${INIT_CKPT:-./outputs/Dora-VAE-1.1/dora_vae_1_1.ckpt}"
 EXP_ROOT_DIR="${EXP_ROOT_DIR:-${WORK}/PhysGen}"
 EXP_NAME="${EXP_NAME:-ckpts}"
+RUN_TIMESTAMP="$(date +@%Y%m%d-%H%M%S)"
+TRIAL_DIR="${EXP_ROOT_DIR}/${EXP_NAME}/${RUN_TAG}${RUN_TIMESTAMP}"
+CKPT_DIR="${TRIAL_DIR}/ckpts"
 
 if [ ! -d "$DATA_ROOT" ]; then
   echo "ERROR: preprocessed dataset root not found: $DATA_ROOT"
@@ -64,12 +67,19 @@ if [ ! -f "$CONFIG_PATH" ]; then
   exit 1
 fi
 
+echo "Resolved exp_root_dir: $EXP_ROOT_DIR"
+echo "Resolved experiment name: $EXP_NAME"
+echo "Resolved run tag: $RUN_TAG"
+echo "Expected trial_dir: $TRIAL_DIR"
+echo "Expected checkpoint dir: $CKPT_DIR"
+
 srun "$PYTHON_BIN" -u launch_shapevae.py \
   --config "$CONFIG_PATH" \
   --train \
   --gpu "$GPU_IDS" \
   exp_root_dir="$EXP_ROOT_DIR" \
   name="$EXP_NAME" \
+  timestamp="$RUN_TIMESTAMP" \
   data.root_dir="$DATA_ROOT" \
   data.batch_size="$BATCH_SIZE" \
   data.num_workers="$NUM_WORKERS" \

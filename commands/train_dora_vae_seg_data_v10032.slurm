@@ -62,7 +62,7 @@ if [ ! -f "$CONFIG_PATH" ]; then
   exit 1
 fi
 
-"$PYTHON_BIN" -u launch_shapevae.py \
+srun "$PYTHON_BIN" -u launch_shapevae.py \
   --config "$CONFIG_PATH" \
   --train \
   --gpu "$GPU_IDS" \

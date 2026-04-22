@@ -10,7 +10,7 @@ import pytorch_lightning as pl
 import torch
 import shutil
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
+from pytorch_lightning.callbacks import Callback, LearningRateMonitor
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
 from pytorch_lightning.utilities.rank_zero import rank_zero_only
 import craftsman
@@ -61,6 +61,49 @@ class ColoredFilter(logging.Filter):
             record.levelname = f"{color_start}[{record.levelname}]"
             record.msg = f"{record.msg}{self.RESET}"
         return True
+
+
+class TorchSaveCheckpoint(Callback):
+    def __init__(self, dirpath: str, **checkpoint_cfg):
+        super().__init__()
+        self.dirpath = dirpath
+        self.every_n_train_steps = int(checkpoint_cfg.get("every_n_train_steps", 0) or 0)
+        self.save_last = bool(checkpoint_cfg.get("save_last", False))
+        self.save_weights_only = bool(checkpoint_cfg.get("save_weights_only", False))
+
+    def _checkpoint_payload(self, trainer: Trainer, pl_module: pl.LightningModule):
+        state_dict = pl_module.state_dict()
+        payload = {
+            "state_dict": state_dict,
+            "epoch": trainer.current_epoch,
+            "global_step": trainer.global_step,
+        }
+        if not self.save_weights_only:
+            payload["optimizer_states"] = [opt.state_dict() for opt in trainer.optimizers]
+            if trainer.lr_scheduler_configs:
+                payload["lr_schedulers"] = [
+                    cfg.scheduler.state_dict() for cfg in trainer.lr_scheduler_configs
+                ]
+        return payload
+
+    def _save(self, trainer: Trainer, pl_module: pl.LightningModule, filename: str):
+        if not trainer.is_global_zero:
+            return
+        os.makedirs(self.dirpath, exist_ok=True)
+        filepath = os.path.join(self.dirpath, filename)
+        torch.save(self._checkpoint_payload(trainer, pl_module), filepath)
+        logging.getLogger("pytorch_lightning").info("Saved checkpoint to %s", filepath)
+
+    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
+        if self.every_n_train_steps <= 0:
+            return
+        if trainer.global_step <= 0 or trainer.global_step % self.every_n_train_steps != 0:
+            return
+        self._save(trainer, pl_module, f"step={trainer.global_step}.ckpt")
+
+    def on_train_end(self, trainer, pl_module):
+        if self.save_last:
+            self._save(trainer, pl_module, "last.ckpt")
 
 
 def load_custom_module(module_path):
@@ -183,7 +226,7 @@ def main(args, extras) -> None:
     callbacks = []
     if args.train:
         callbacks += [
-            ModelCheckpoint(
+            TorchSaveCheckpoint(
                 dirpath=os.path.join(cfg.trial_dir, "ckpts"), **cfg.checkpoint
             ),
             LearningRateMonitor(logging_interval="step"),

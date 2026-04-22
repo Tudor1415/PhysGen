@@ -204,7 +204,8 @@ def main(args, extras) -> None:
         else:
             callbacks += [CustomProgressBar(refresh_rate=1)]
     
-    if not os.path.exists(os.path.join(cfg.trial_dir, "code")):
+    # In multi-GPU runs, only rank 0 should snapshot the code directory.
+    if get_rank() == 0 and not os.path.exists(os.path.join(cfg.trial_dir, "code")):
         shutil.copytree('craftsman', os.path.join(cfg.trial_dir, "code"))
         shutil.copy2('launch_shapevae.py', os.path.join(cfg.trial_dir, "code", "launch_shapevae.py"))
 

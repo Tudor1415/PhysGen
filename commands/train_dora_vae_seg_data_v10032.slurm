@@ -3,9 +3,9 @@
 #SBATCH -A wbw@v100
 #SBATCH -C v100-32g
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
+#SBATCH --ntasks-per-node=4
 #SBATCH --gres=gpu:4
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=10
 #SBATCH --hint=nomultithread
 #SBATCH --time=10:00:00
 #SBATCH --output=slurm_logs/dora_vae_train_%j.out

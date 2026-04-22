@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=dora_vae_train
 #SBATCH -A wbw@v100
-#SBATCH -C v100-32g
+#SBATCH --partition=gpu_p2
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=10
+#SBATCH --ntasks-per-node=8
+#SBATCH --gres=gpu:8
+#SBATCH --cpus-per-task=3
 #SBATCH --hint=nomultithread
 #SBATCH --time=10:00:00
 #SBATCH --output=slurm_logs/dora_vae_train_%j.out
@@ -40,7 +40,7 @@ echo "Using python: $PYTHON_BIN"
 DATA_ROOT="${DATA_ROOT:-${SCRATCH}/seg_data_dora}"
 CONFIG_PATH="${CONFIG_PATH:-configs/shape-autoencoder/Dora-VAE-train.yaml}"
 RUN_TAG="${RUN_TAG:-shapevae_train_seg_data_${SLURM_JOB_ID:-local}}"
-GPU_IDS="${GPU_IDS:-0}"
+GPU_IDS="${GPU_IDS:-0,1,2,3,4,5,6,7}"
 BATCH_SIZE="${BATCH_SIZE:-10}"
 NUM_WORKERS="${NUM_WORKERS:-${SLURM_CPUS_PER_TASK:-16}}"
 INIT_CKPT="${INIT_CKPT:-./outputs/Dora-VAE-1.1/dora_vae_1_1.ckpt}"

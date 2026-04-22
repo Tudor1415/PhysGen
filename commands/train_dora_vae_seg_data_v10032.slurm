@@ -44,6 +44,8 @@ GPU_IDS="${GPU_IDS:-0}"
 BATCH_SIZE="${BATCH_SIZE:-10}"
 NUM_WORKERS="${NUM_WORKERS:-${SLURM_CPUS_PER_TASK:-16}}"
 INIT_CKPT="${INIT_CKPT:-./outputs/Dora-VAE-1.1/dora_vae_1_1.ckpt}"
+EXP_ROOT_DIR="${EXP_ROOT_DIR:-${WORK}/PhysGen}"
+EXP_NAME="${EXP_NAME:-ckpts}"
 
 if [ ! -d "$DATA_ROOT" ]; then
   echo "ERROR: preprocessed dataset root not found: $DATA_ROOT"
@@ -66,6 +68,8 @@ srun "$PYTHON_BIN" -u launch_shapevae.py \
   --config "$CONFIG_PATH" \
   --train \
   --gpu "$GPU_IDS" \
+  exp_root_dir="$EXP_ROOT_DIR" \
+  name="$EXP_NAME" \
   data.root_dir="$DATA_ROOT" \
   data.batch_size="$BATCH_SIZE" \
   data.num_workers="$NUM_WORKERS" \

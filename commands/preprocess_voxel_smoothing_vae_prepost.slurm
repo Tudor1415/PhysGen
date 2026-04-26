@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --time=08:00:00
+#SBATCH --time=15:00:00
 #SBATCH --output=slurm_logs/voxel_smoothing_pre_%j.out
 #SBATCH --error=slurm_logs/voxel_smoothing_pre_%j.err
 

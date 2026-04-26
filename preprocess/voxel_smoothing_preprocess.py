@@ -133,6 +133,10 @@ def _point_in_triangle_2d(
     return u >= -eps and v >= -eps and (u + v) <= 1.0 + eps
 
 
+def _cross_2d(a: np.ndarray, b: np.ndarray) -> float:
+    return float(a[0] * b[1] - a[1] * b[0])
+
+
 def _face_connected_components(mesh: trimesh.Trimesh) -> List[np.ndarray]:
     face_count = int(len(mesh.faces))
     adjacency = [[] for _ in range(face_count)]
@@ -284,7 +288,7 @@ def _triangulate_planar_loop(
             a = projected[prev_local]
             b = projected[curr_local]
             c = projected[next_local]
-            cross = float(np.cross(b - a, c - b))
+            cross = _cross_2d(b - a, c - b)
             if cross <= eps:
                 continue
 
@@ -792,6 +796,11 @@ def _process_pair(
     return output_path.resolve()
 
 
+def _expected_output_path(obj_path: Path, data_root: Path, samples_root: Path) -> Path:
+    relative_obj_path = obj_path.relative_to(data_root)
+    return (samples_root / relative_obj_path).with_suffix(".npz")
+
+
 def _write_json(path: Path, payload) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
@@ -900,9 +909,16 @@ def main() -> None:
 
     pairs, invalid_entries = _discover_pairs(data_root)
     processed_files: List[str] = []
+    skipped_existing = 0
 
     for obj_path, json_path in tqdm(pairs, desc="Preprocessing voxel-smoothing pairs"):
         try:
+            output_path = _expected_output_path(obj_path, data_root, samples_root)
+            if output_path.exists():
+                processed_files.append(str(output_path.resolve()))
+                skipped_existing += 1
+                continue
+
             output_path = _process_pair(obj_path, json_path, data_root, samples_root, args)
             processed_files.append(str(output_path))
         except Exception as exc:
@@ -930,6 +946,7 @@ def main() -> None:
     print(f"Data root: {data_root}")
     print(f"Output root: {output_root}")
     print(f"Processed meshes: {len(processed_files)}")
+    print(f"Skipped existing: {skipped_existing}")
     print(f"Invalid meshes: {len(invalid_entries)}")
     if processed_files:
         print(f"Split files: {output_root / 'train.json'} {output_root / 'val.json'} {output_root / 'test.json'}")

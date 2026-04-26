@@ -32,8 +32,8 @@ PYTHON_BIN="$(command -v python)"
 echo "Using python: $PYTHON_BIN"
 "$PYTHON_BIN" --version
 
-DATA_ROOT="${DATA_ROOT:-${SCRATCH}/voxel_smoothing}"
-PROC_ROOT="${PROC_ROOT:-${SCRATCH}/voxel_smoothing_vae}"
+DATA_ROOT="${DATA_ROOT:-${SCRATCH}/seg_data}"
+PROC_ROOT="${PROC_ROOT:-${SCRATCH}/seg_data_voxel_smoothing}"
 
 if [ ! -d "$DATA_ROOT" ]; then
   echo "ERROR: data directory not found: $DATA_ROOT"

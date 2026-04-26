@@ -13,9 +13,21 @@ set +u
 set -eo pipefail
 set -x
 
+module purge
+module load gcc/14.2.0
+
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
 
 export PYTHONUNBUFFERED=1
+export LD_LIBRARY_PATH="$(dirname "$(g++ -print-file-name=libstdc++.so.6)")${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+unset CONDA_PREFIX
+unset CONDA_DEFAULT_ENV
+unset CONDA_EXE
+unset CONDA_PYTHON_EXE
+unset CONDA_PROMPT_MODIFIER
+unset CONDA_SHLVL
+unset PYTHONPATH
 
 PHYSGEN_VENV="${PHYSGEN_VENV:-${WORK}/PhysGen/physgen}"
 
@@ -28,9 +40,17 @@ fi
 # shellcheck disable=SC1091
 source "$PHYSGEN_VENV/bin/activate"
 
+if [ -d "$PHYSGEN_VENV/lib" ]; then
+  export LD_LIBRARY_PATH="$PHYSGEN_VENV/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+if [ -d "$PHYSGEN_VENV/lib64" ]; then
+  export LD_LIBRARY_PATH="$PHYSGEN_VENV/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+
 PYTHON_BIN="$(command -v python)"
 echo "Using python: $PYTHON_BIN"
 "$PYTHON_BIN" --version
+echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 
 DATA_ROOT="${DATA_ROOT:-${SCRATCH}/seg_data}"
 PROC_ROOT="${PROC_ROOT:-${SCRATCH}/seg_data_voxel_smoothing}"

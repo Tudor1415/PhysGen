@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=devoxelize_obj
 #SBATCH -A wbw@v100
-#SBATCH --partition=gpu_p2
+#SBATCH -C v100-32g
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1

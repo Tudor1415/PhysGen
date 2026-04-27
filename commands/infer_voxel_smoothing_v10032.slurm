@@ -7,7 +7,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=10
 #SBATCH --hint=nomultithread
-#SBATCH --time=00:45:00
+#SBATCH --time=00:30:00
 #SBATCH --export=ALL
 #SBATCH --output=slurm_logs/voxel_infer_%j.out
 #SBATCH --error=slurm_logs/voxel_infer_%j.err

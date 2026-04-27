@@ -8,7 +8,7 @@
 #SBATCH --gres=gpu:8
 #SBATCH --cpus-per-task=3
 #SBATCH --hint=nomultithread
-#SBATCH --time=10:00:00
+#SBATCH --time=20:00:00
 #SBATCH --output=slurm_logs/voxel_vae_train_%j.out
 #SBATCH --error=slurm_logs/voxel_vae_train_%j.err
 
@@ -46,11 +46,23 @@ BATCH_SIZE="${BATCH_SIZE:-10}"
 NUM_WORKERS="${NUM_WORKERS:-${SLURM_CPUS_PER_TASK:-16}}"
 INIT_CKPT="${INIT_CKPT:-./outputs/Dora-VAE-1.1/dora_vae_1_1.ckpt}"
 RESUME_CKPT="${RESUME_CKPT:-}"
+MAX_EPOCHS="${MAX_EPOCHS:-}"
+LR="${LR:-}"
+SCHEDULER_NAME="${SCHEDULER_NAME:-}"
+SCHED_INTERVAL="${SCHED_INTERVAL:-epoch}"
+SCHED_T_MAX="${SCHED_T_MAX:-}"
+ETA_MIN="${ETA_MIN:-}"
 EXP_ROOT_DIR="${EXP_ROOT_DIR:-${WORK}/PhysGen}"
 EXP_NAME="${EXP_NAME:-ckpts}"
 RUN_TIMESTAMP="${RUN_TIMESTAMP:-_$(date +%Y%m%d-%H%M%S)}"
 TRIAL_DIR="${EXP_ROOT_DIR}/${EXP_NAME}/${RUN_TAG}${RUN_TIMESTAMP}"
 CKPT_DIR="${TRIAL_DIR}/ckpts"
+
+case "$INIT_CKPT" in
+  none|NONE|None|null|NULL)
+    INIT_CKPT=""
+    ;;
+esac
 
 if [ ! -d "$DATA_ROOT" ]; then
   echo "ERROR: preprocessed dataset root not found: $DATA_ROOT"
@@ -108,6 +120,27 @@ fi
 
 if [ -n "$RESUME_CKPT" ]; then
   CMD+=( resume="$RESUME_CKPT" )
+fi
+
+if [ -n "$MAX_EPOCHS" ]; then
+  CMD+=( trainer.max_epochs="$MAX_EPOCHS" )
+fi
+
+if [ -n "$LR" ]; then
+  CMD+=( system.optimizer.args.lr="$LR" )
+fi
+
+if [ -n "$SCHEDULER_NAME" ]; then
+  CMD+=( system.scheduler.name="$SCHEDULER_NAME" )
+  CMD+=( system.scheduler.interval="$SCHED_INTERVAL" )
+fi
+
+if [ -n "$SCHED_T_MAX" ]; then
+  CMD+=( system.scheduler.args.T_max="$SCHED_T_MAX" )
+fi
+
+if [ -n "$ETA_MIN" ]; then
+  CMD+=( system.scheduler.args.eta_min="$ETA_MIN" )
 fi
 
 srun "${CMD[@]}"

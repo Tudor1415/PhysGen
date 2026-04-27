@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=voxel_vae_train
 #SBATCH -A wbw@v100
-#SBATCH -C v100-32g
 #SBATCH --partition=gpu_p2
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8

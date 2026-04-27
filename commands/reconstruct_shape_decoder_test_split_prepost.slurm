@@ -45,6 +45,12 @@ SAMPLE_OFFSET="${SAMPLE_OFFSET:-0}"
 NUM_WORKERS="${NUM_WORKERS:-${SLURM_CPUS_PER_TASK:-10}}"
 RUN_TAG="${RUN_TAG:-shape_recon_test_${SLURM_JOB_ID:-local}}"
 
+if [[ "$SPLIT_JSON" == *"seg_data_voxel_smoothing"* ]]; then
+  echo "ERROR: $SPLIT_JSON belongs to the voxel-smoothing dataset."
+  echo "Use commands/infer_voxel_smoothing_v10032.slurm for voxel validation/test inference."
+  exit 1
+fi
+
 if [ ! -d "$RAW_DATA_ROOT" ]; then
   echo "ERROR: raw mesh directory not found: $RAW_DATA_ROOT"
   exit 1

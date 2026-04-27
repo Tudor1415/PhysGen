@@ -108,7 +108,7 @@ echo "Expected trial_dir: $TRIAL_DIR"
   exp_root_dir="$EXP_ROOT_DIR" \
   name="$EXP_NAME" \
   tag="$RUN_TAG" \
-  timestamp="$RUN_TIMESTAMP" \
+  timestamp="\"$RUN_TIMESTAMP\"" \
   data.root_dir="$DATA_ROOT" \
   data.num_workers="$NUM_WORKERS" \
   data.eval_variant_index="$EVAL_VARIANT_INDEX" \
